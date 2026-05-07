@@ -1,0 +1,71 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+
+// Function to inject the script into the editor
+void injectScript(const std::string& text, size_t position) {
+    // Get the current line and column from the position
+    int line = (position / 80) + 1;
+    int col = (position % 80);
+
+    // Create a temporary file to hold the injected script
+    std::ofstream tempFile("temp.txt");
+    if (!tempFile.is_open()) {
+        std::cerr << "Error: Could not open temporary file.\n";
+        return;
+    }
+
+    // Write the script into the temporary file
+    tempFile << "console.log(\"Injected script at position (" << line << ", " << col << ").!\");\n";
+
+    // Read the original text and inject the script
+    std::ifstream originalText("original.txt");
+    if (!originalText.is_open()) {
+        std::cerr << "Error: Could not open original file.\n";
+        return;
+    }
+
+    std::string originalTextContent;
+    originalText.seekg(0, std::ios::end);
+    originalText.seekg(0, std::ios::beg);
+    originalText >> std::ws;
+    originalTextContent.assign((std::istreambuf_iterator<char>(originalText)), (std::istreambuf_iterator<char>()));
+
+    // Inject the script into the original text
+    size_t pos = line - 1;
+    for (size_t i = 0; i < col; ++i) {
+        --pos;
+        if (!originalTextContent[pos]) {
+            break;
+        }
+    }
+
+    // Write the modified text back to the original file
+    std::ofstream modifiedFile("modified.txt");
+    modifiedFile << originalTextContent.substr(0, pos);
+    tempFile.seekg(0, std::ios::beg);
+    tempFile >> std::ws;
+    tempFile >> modifiedFile.rdbuf() >> std::ws;
+    modifiedFile << originalTextContent.substr(pos);
+
+    // Close the files
+    tempFile.close();
+    originalText.close();
+    modifiedFile.close();
+}
+
+int main(int argc, char* argv[]) {
+    if (argc != 3) {
+        std::cerr << "Usage: scriptInjector <text> <position>\n";
+        return 1;
+    }
+
+    // Parse the command-line arguments
+    std::string text = argv[1];
+    size_t position = std::stoul(argv[2]);
+
+    // Inject the script into the editor
+    injectScript(text, position);
+
+    return 0;
+}
