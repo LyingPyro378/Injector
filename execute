@@ -1,0 +1,11 @@
+CC=g++
+CFLAGS=-c -std=c++11
+
+scriptInjector.o: scriptInjector.cpp
+    $(CC) $(CFLAGS) scriptInjector.cpp -o scriptInjector.o
+
+all: scriptInjector
+    g++ scriptInjector.o -o scriptInjector
+
+clean:
+    rm -f scriptInjector scriptInjector.o
